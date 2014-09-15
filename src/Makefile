@@ -1,11 +1,12 @@
-JFLAGS = -g -classpath ./httpcomponents-client-4.3.5/org.apache.httpcomponents.httpclient_4.3.5.jar
+JFLAGS = -g -classpath ./APIs/org.apache.httpcomponents.httpclient_4.3.5.jar:./APIs/commons-logging-1.2.jar:./
 JC = javac
 .SUFFIXES: .java .class
 .java.class:
 	$(JC) $(JFLAGS) $*.java
 
 CLASSES = \
-	  ClientWithResponseHandler.java
+	  XMLDownloader.java\
+	  DataCollectingDriver.java
 
 default: classes
 
