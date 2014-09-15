@@ -9,6 +9,7 @@
  *
  */
 import java.io.IOException;
+import java.io.PrintWriter;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -24,6 +25,7 @@ import org.apache.http.message.BasicNameValuePair;
 import java.util.LinkedList;
 import java.util.List;
 import org.apache.http.NameValuePair;
+import java.io.File;
 
 public class XMLDownloader 
 {
@@ -49,7 +51,6 @@ public class XMLDownloader
                 .setPath("/entrez/eutils/esearch.fcgi")
                 .setParameters(queryList);
             String uri = uriBuilder.toString();
-            System.out.println(uri);
             HttpGet httpget = new HttpGet(uri);
 
             System.out.println("Executing request " + httpget.getRequestLine());
@@ -75,8 +76,12 @@ public class XMLDownloader
 
             };
             String responseBody = httpclient.execute(httpget, responseHandler);
-            System.out.println("----------------------------------------");
-            System.out.println(responseBody);
+            String filename = "../resource/xml/" + journalName + restart + ".xml";
+            File file = new File(filename);
+            file.createNewFile();
+            PrintWriter pw = new PrintWriter(file);
+            pw.println(responseBody);
+            pw.close();
         } 
         finally 
         {
