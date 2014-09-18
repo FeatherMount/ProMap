@@ -2,17 +2,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
-public class XMLParser()
+public class XMLParser
 {
     private ArrayList<String> idList;
     private String filename;
@@ -57,7 +54,7 @@ public class XMLParser()
         }
         catch (SAXException se)
         {
-            se.printStachTrace();
+            se.printStackTrace();
         }
         catch (IOException ioe)
         {
@@ -65,7 +62,7 @@ public class XMLParser()
         }
     }
 
-    public String[] getIdList()
+    public ArrayList<String> getIdList()
     {
         parseXmlFile();
         // get the root element
@@ -73,18 +70,20 @@ public class XMLParser()
         // get the nodelist of <IdList>
         NodeList nlIdList = docEle.getElementsByTagName("IdList");
         if (nlIdList != null && nlIdList.getLength() > 0)
-            Element eleIdList = (Element) nlIdList.item(0);
-        // get the nodelist of <Id>
-        NodeList nlId = eleIdList.getElementsByTagName("Id");
-        if (nlId != null && nlId.getLength() > 0)
         {
-            for (int i = 0; i < nlId.getLength(); i++)
+            Element eleIdList = (Element) nlIdList.item(0);
+            // get the nodelist of <Id>
+            NodeList nlId = eleIdList.getElementsByTagName("Id");
+            if (nlId != null && nlId.getLength() > 0)
             {
-                // get the id element
-                Element eleId = (Element) nlId.item(i);
-                // get the value of the id element
-                String id = eleId.getFirstChild().getNodeValue();
-                idList.add(id);
+                for (int i = 0; i < nlId.getLength(); i++)
+                {
+                    // get the id element
+                    Element eleId = (Element) nlId.item(i);
+                    // get the value of the id element
+                    String id = eleId.getFirstChild().getNodeValue();
+                    idList.add(id);
+                }
             }
         }
         return idList;

@@ -23,6 +23,7 @@ import org.apache.commons.logging.impl.*;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.NameValuePair;
 import java.io.File;
@@ -36,7 +37,7 @@ public class XMLDownloader
         try 
         {
             NameValuePair dbQuery = new BasicNameValuePair("db", "pmc");
-            NameValuePair termQuery = new BasicNameValuePair("term", journalName);
+            NameValuePair termQuery = new BasicNameValuePair("term", journalName+"[ta]");
             NameValuePair restartQuery = new BasicNameValuePair("restart", Integer.toString(restart));
             NameValuePair retmaxQuery = new BasicNameValuePair("retmax", Integer.toString(retmax));
             List<NameValuePair> queryList = new LinkedList<NameValuePair>();
@@ -77,6 +78,7 @@ public class XMLDownloader
             };
             String responseBody = httpclient.execute(httpget, responseHandler);
             String filename = "../resource/xml/" + journalName + restart + ".xml";
+            System.out.println("filename = " + filename);
             File file = new File(filename);
             file.createNewFile();
             PrintWriter pw = new PrintWriter(file);
@@ -89,14 +91,16 @@ public class XMLDownloader
         }
     }
 
-    public static final void downloadAllXML (String[] journalNames) throws Exception
+    public static final void downloadAllXML (ArrayList<String> journalNames) throws Exception
     {
         for (String journalName : journalNames)
         {
             downloadXML(journalName, 0, 1);
-            String filename = "../resource/xml" + journalName + restart + ".xml";
+            journalName = journalName.replace(' ', '+');
+            String filename = "../resource/xml/" + journalName + "0" + ".xml";
             XMLParser xp = new XMLParser(filename);
             int totalRecordCount = xp.getTotalRecordCount();
+            System.out.println("totalRecordCount = " + totalRecordCount);
             // error check here
             
             if (totalRecordCount > 1)
@@ -108,6 +112,7 @@ public class XMLDownloader
                     currentIndex += 100000;
                 }
             }
+            break;
         }
     }
 }

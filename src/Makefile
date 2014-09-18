@@ -6,7 +6,8 @@ JC = javac
 
 CLASSES = \
 	  XMLDownloader.java\
-	  DataCollectingDriver.java
+	  DataCollectingDriver.java\
+	  XMLParser.java
 
 default: classes
 
