@@ -93,8 +93,22 @@ public class XMLDownloader
     {
         for (String journalName : journalNames)
         {
-            downloadXML(
-
-
+            downloadXML(journalName, 0, 1);
+            String filename = "../resource/xml" + journalName + restart + ".xml";
+            XMLParser xp = new XMLParser(filename);
+            int totalRecordCount = xp.getTotalRecordCount();
+            // error check here
+            
+            if (totalRecordCount > 1)
+            {
+                int currentIndex = 1;
+                while (currentIndex <= totalRecordCount)
+                {
+                    downloadXML(journalName, currentIndex, 100000);
+                    currentIndex += 100000;
+                }
+            }
+        }
+    }
 }
 
