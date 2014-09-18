@@ -11,8 +11,6 @@ public class DataCollectingDriver
         ArrayList<String> journalNames = new ArrayList<String>();
         while ((nextLine = reader.readNext()) != null)
             journalNames.add(nextLine[0]);
-        for (String journalName : journalNames)
-            System.out.println(journalName);
         //XMLDownloader.downloadXML("Nature", 1, 10);
     }
 }

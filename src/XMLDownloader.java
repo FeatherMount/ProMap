@@ -29,7 +29,7 @@ import java.io.File;
 
 public class XMLDownloader 
 {
-    public static final void downloadXML(String journalName, int restart, int retmax) throws Exception 
+    private static final void downloadXML(String journalName, int restart, int retmax) throws Exception 
     {
         journalName = journalName.replace(' ', '+');
         CloseableHttpClient httpclient = HttpClients.createDefault();
@@ -88,6 +88,13 @@ public class XMLDownloader
             httpclient.close();
         }
     }
+
+    public static final void downloadAllXML (String[] journalNames) throws Exception
+    {
+        for (String journalName : journalNames)
+        {
+            downloadXML(
+
 
 }
 
