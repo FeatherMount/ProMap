@@ -1,4 +1,4 @@
-JFLAGS = -g -classpath ./APIs/org.apache.httpcomponents.httpclient_4.3.5.jar:./APIs/commons-logging-1.2.jar:./
+JFLAGS = -g -classpath ./APIs/org.apache.httpcomponents.httpclient_4.3.5.jar:./APIs/commons-logging-1.2.jar:./:./APIs/opencsv-3.0.jar
 JC = javac
 .SUFFIXES: .java .class
 .java.class:
