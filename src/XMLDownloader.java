@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.NameValuePair;
 import java.io.File;
+import java.lang.Thread;
 
 public class XMLDownloader 
 {
@@ -105,6 +106,17 @@ public class XMLDownloader
             
             if (totalRecordCount > 1)
             {
+                // prevent from blocking the IP, max request frequency is 3 queries per sec
+                try
+                {
+                    Thread.sleep(400);
+                }
+                catch (InterruptedException ie) 
+                {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+
                 int currentIndex = 1;
                 while (currentIndex <= totalRecordCount)
                 {
@@ -112,7 +124,6 @@ public class XMLDownloader
                     currentIndex += 100000;
                 }
             }
-            break;
         }
     }
 }
