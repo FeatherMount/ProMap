@@ -10,7 +10,7 @@ public class DataCollectingDriver
         String [] nextLine;
         ArrayList<String> journalNames = new ArrayList<String>();
         while ((nextLine = reader.readNext()) != null)
-            journalNames.add(nextLine[0]);
+            journalNames.add(nextLine[1]);
         XMLDownloader.downloadAllXML(journalNames);
         //XMLDownloader.downloadXML("Nature", 1, 10);
     }
