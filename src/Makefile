@@ -1,4 +1,4 @@
-JFLAGS = -g -classpath ./APIs/org.apache.httpcomponents.httpclient_4.3.5.jar:./APIs/commons-logging-1.2.jar:./:./APIs/opencsv-3.0.jar
+JFLAGS = -g -classpath ./APIs/org.apache.httpcomponents.httpclient_4.3.5.jar:./APIs/commons-logging-1.2.jar:./:./APIs/opencsv-3.0.jar:./APIs/mysql-connector-java-5.1.32-bin.jar
 JC = javac
 .SUFFIXES: .java .class
 .java.class:
@@ -7,7 +7,9 @@ JC = javac
 CLASSES = \
 	  XMLDownloader.java\
 	  DataCollectingDriver.java\
-	  XMLParser.java
+	  XMLParser.java\
+	  PMCIdRetriever.java\
+	  DatabaseManager.java
 
 default: classes
 

@@ -12,6 +12,5 @@ public class DataCollectingDriver
         while ((nextLine = reader.readNext()) != null)
             journalNames.add(nextLine[1]);
         XMLDownloader.downloadAllXML(journalNames);
-        //XMLDownloader.downloadXML("Nature", 1, 10);
     }
 }
