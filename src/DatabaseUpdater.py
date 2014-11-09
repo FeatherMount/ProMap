@@ -1,5 +1,6 @@
 import mysql.connector
 from mysql.connector import errorcode
+from datetime import date
 
 def update(data):
     """
@@ -28,7 +29,8 @@ def update(data):
         # check if the paper already exists in database
         query = "SELECT id FROM papers WHERE pmcid = {}".format(data[0])
         cursor.execute(query)
-        if (cursor):
+        row = cursor.fetchone()
+        if (row != None):
             print('duplicate insertion: rejected')
             return 0
         # process corresponding authors
@@ -36,32 +38,53 @@ def update(data):
         cAuthorId = 0
         for cAuthor in data[2]:
             # check to see the the author is in the database
-            query = "SELECT id FROM authors WHERE name = {}".format(cAuthor['name'])
-            cursor.execute(query)
-            if (cursor):
-                cAuthorId = cursor[0]['id']
+            query = ("SELECT id, independence_date "
+                     "FROM authors "
+                     "WHERE name = %s")
+            queryData = (cAuthor[0],)
+            cursor.execute(query, queryData)
+            row = cursor.fetchone()
+            if (row != None):
+                cAuthorId = row['id']
                 # the author is in the database
                 # update the corresponding entry
-                # TODO
+                if (date(cursor[0]['independence_date']) < date(data[3])):
+                    earlierDate = date(cursor[0]['independence_date'])
+                else:
+                    earlierDate = date(data[3])
+                updateAuthor = ("UPDATE authors "
+                                "SET total_publication = total_publication + 1, independence_date = %s "
+                                "WHERE  id = %s")
+                authorData = (earlierDate, cAuthorId)
+                cursor.execute(upDateAuthor, authorData)
             else:
                 # the author is not in the database
                 # insert a new entry
                 addAuthor = ("INSERT INTO authors "
-                             "(name, email, total_pubication, independence_date) "
+                             "(name, email, total_publication, independence_date) "
                              "VALUES (%s, %s, %s, %s)")
-                authorData = (cAuthor['name'], cAuthor['email'], '1', date(data[3]))
-                cursor.execute(addAutor, authorData)
+                
+                authorData = (cAuthor[0], cAuthor[1], 1, date(int(data[3][0]), \
+                int(data[3][1]), int(data[3][2])))
+                cursor.execute(addAuthor, authorData)
                 cAuthorId = cursor.lastrowid
 
         # process other authors
         for otherAuthorName in data[1]:
             # check to see if the author is in the database
-            query = "SELECT id FROM authors WHERE name = {}".format(otherAuthorName)
-            cursor.execute(query)
-            if (cursor):
+            query = ("SELECT id FROM authors WHERE name = %s")
+            queryData = (otherAuthorName,)
+            cursor.execute(query, queryData)
+            row = cursor.fetchone()
+            if (row != None):
+                otherAuthorId = cursor[0]['id']
                 # the author is in the database
                 # update the corresponding entry
-                # TODO
+                updateAuthor = ("UPDATE authors "
+                                "SET total_publication = total_publication + 1 "
+                                "WHERE id = %s")
+                authorData = (otherAuthorId,)
+                cursor.execute(updateAuthor, authorData)
             else:
                 # the author is not in the database
                 # insert a new entry
@@ -86,4 +109,5 @@ def update(data):
     conn.close()
 
 if __name__ == '__main__':
+    data = (1, ['zhou zhou'], [('zhou zhou', 'zz2181@columbia.edu')], ('2014', '1', '1')) 
     update(data)
