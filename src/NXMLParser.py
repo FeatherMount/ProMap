@@ -8,7 +8,8 @@ def isEmpty(obj):
 def parse(filename):
     """
     Takes the xml filename as input and returns a tuple 
-    with pmcId, authorlist, and corresponding author  
+    with pmcId, other author list, corresponding author, 
+    and date of publication  
     """
 
     #filename = '../resource/AAPS_J_2010_Oct_19_12(4)_716-728.nxml'
@@ -19,11 +20,12 @@ def parse(filename):
     articleMeta = root[0][1]
     # pubmed central article id
     pmcId = ''
-    # the author list, the list of names
-    authors = []
-    # the name and email of one of the corresponding authors
-    cAuthor = {'name': ' ', 'email': ' '}
-
+    # the author list, the list of names excluding corresponding
+    # athor
+    otherAuthors = []
+    # the name and email of the corresponding authors
+    cAuthors = []
+    
     for child in articleMeta:
         # find the pmc id
         if ((child.tag == 'article-id') and not(isEmpty(child.attrib))):
@@ -32,6 +34,13 @@ def parse(filename):
         # find the author group
         elif (child.tag == 'contrib-group'):
             authorGroup = child
+        # find the publication date
+        elif (child.tag == "history"):
+            for date in child:
+                if (date.attrib['date-type'] == 'accepted'):
+                    #publiction date YEAR MONTH DAY
+                    publicationDate = (date.find('year').text, \
+                            date.find('month').text, date.find('day').text)
     
     # parse author group information
     for child in authorGroup:
@@ -39,12 +48,15 @@ def parse(filename):
             # the first child is the name tag
             name = child[0].find('given-names').text + ' ' \
                     + child[0].find('surname').text
-            authors.append(name)
-            # if it is corresponding author log it
             if ('corresp' in child.attrib and child.attrib['corresp'] == 'yes'):
-                cAuthor['name'] = name
-                cAuthor['email'] = child[1].find('email').text
-    return (pmcId, authors, cAuthor)
+                # if it a corresponding author
+                data = (name, child[1].find('email').text)
+                cAuthors.append(data)
+            else:
+                # if not a corresponding author
+                otherAuthors.append(name)
+    print(pmcId, otherAuthors, cAuthors, publicationDate)
+    return(pmcId, otherAuthors, cAuthors, publicationDate)
 
 if __name__ == '__main__':
     parse('../resource/AAPS_J_2010_Oct_19_12(4)_716-728.nxml')
