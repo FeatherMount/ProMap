@@ -5,6 +5,19 @@ def isEmpty(obj):
     if (obj): return False
     else: return True
 
+def findInSubtree(element, tagname):
+    result = []
+    print(element.tag)
+    if (element.tag == tagname):
+        result.extend([element])
+    if (len(element) > 0):
+        for child in element:
+            result.extend(findInSubtree(child, tagname))
+        return result
+    return result
+
+
+
 def parse(filename):
     """
     Takes the xml filename as input and returns a tuple 
@@ -25,6 +38,8 @@ def parse(filename):
     otherAuthors = []
     # the name and email of the corresponding authors
     cAuthors = []
+    # container for all the author groups
+    authorGroups = []
     
     for child in articleMeta:
         # find the pmc id
@@ -33,7 +48,10 @@ def parse(filename):
                 pmcId = child.text
         # find the author group
         elif (child.tag == 'contrib-group'):
-            authorGroup = child
+            authorGroups.append(child)
+        # this child may contain important corresponding information
+        elif (child.tag == 'author-notes'):
+            authorNotes = child
         # find the publication date
         elif (child.tag == "history"):
             for date in child:
@@ -42,21 +60,55 @@ def parse(filename):
                     publicationDate = (date.find('year').text, \
                             date.find('month').text, date.find('day').text)
     
-    # parse author group information
-    for child in authorGroup:
-        if (child.tag == 'contrib' and child.attrib['contrib-type'] == 'author'):
-            # the first child is the name tag
-            name = child[0].find('given-names').text + ' ' \
-                    + child[0].find('surname').text
-            if ('corresp' in child.attrib and child.attrib['corresp'] == 'yes'):
-                # if it a corresponding author
-                data = (name, child[1].find('email').text)
+    case1 = False  # will be used for post-processing, corr author identified but no email
+    for authorGroup in authorGroups:
+        # parse author group information
+        for child in authorGroup:
+            if (child.tag == 'contrib' and child.attrib['contrib-type'] == 'author'):
+                # the first child is the name tag
+                name = child[0].find('given-names').text + ' ' \
+                        + child[0].find('surname').text
+                if ('corresp' in child.attrib and child.attrib['corresp'] == 'yes'):
+                    # if it a corresponding author
+                    # check to see if there is email field
+                    if (child[1].find('email') != None):
+                        data = (name, child[1].find('email').text)
+                        cAuthors.append(data)
+                    #else post-process this case: case(1)
+                    else:
+                        data = (name, '')
+                        cAuthors.append(data)
+                        case1 = True
+                else:
+                    # if not a corresponding author
+                    otherAuthors.append(name)
+
+    # not done yet, some corresponding author information are embedded in author-notes
+    if (case1):
+        i = 0
+        # corresponding author identified but no email found
+        for child in authorNotes:
+            if (child.tag == 'corresp'):
+                for grandchild in child:
+                    if (grandchild.tag == 'email'):
+                        cAuthors[i] = (cAuthors[i][0], grandchild.text)
+                        i = i + 1
+    else:
+        # the linking information is embedded entirely in the text
+        text = etree.tostring(authorNotes).strip().decode('utf-8')
+        emailElements = findInSubtree(authorNotes, 'email')
+        for emailelement in emailElements:
+            print(emailelement)
+        for name in otherAuthors:
+            j = 0
+            if (text.find(name) != -1):
+                data = (name, emailElements[j].text)
                 cAuthors.append(data)
-            else:
-                # if not a corresponding author
-                otherAuthors.append(name)
+                otherAuthors.remove(name)
+                j = j + 1
+
     print(pmcId, otherAuthors, cAuthors, publicationDate)
     return(pmcId, otherAuthors, cAuthors, publicationDate)
 
 if __name__ == '__main__':
-    parse('../resource/AAPS_J_2010_Oct_19_12(4)_716-728.nxml')
+    parse('../resource/Cancer_Biol_Med_2012_Jun_9(2)_85-89.nxml')

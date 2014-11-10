@@ -2,28 +2,15 @@ import mysql.connector
 from mysql.connector import errorcode
 from datetime import date
 
-def update(data):
+def update(cursor, data):
     """
     function takes in data, a tuple with pmcId, other authorlist, 
     corrsponding author list with information, and publication date
 
+    function also takes in mysql cursor from the caller
+
     it does not return anything but update the database
     """
-    try:
-        conn = mysql.connector.connect(user = 'root', password = 'love',
-                               host = '127.0.0.1',
-                               database = 'ProMap')
-    except mysql.connector.Error as err:
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            print("password and name pair incorrect")
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            print("no such database")
-        else:
-            print(err)
-            exit(1)
-
-    # obtain connection cursor
-    cursor = conn.cursor()
 
     try:
         # check if the paper already exists in database
@@ -45,18 +32,19 @@ def update(data):
             cursor.execute(query, queryData)
             row = cursor.fetchone()
             if (row != None):
-                cAuthorId = row['id']
+                cAuthorId = row[0]
                 # the author is in the database
                 # update the corresponding entry
-                if (date(cursor[0]['independence_date']) < date(data[3])):
-                    earlierDate = date(cursor[0]['independence_date'])
+                if (row[1] != None and 
+                    row[1] < date(int(data[3][0]), int(data[3][1]), int(data[3][2]))):
+                    earlierDate = row[1]
                 else:
-                    earlierDate = date(data[3])
+                    earlierDate = date(int(data[3][0]), int(data[3][1]), int(data[3][2]))
                 updateAuthor = ("UPDATE authors "
-                                "SET total_publication = total_publication + 1, independence_date = %s "
+                                "SET total_publication = total_publication + 1, email = %s, independence_date = %s "
                                 "WHERE  id = %s")
-                authorData = (earlierDate, cAuthorId)
-                cursor.execute(upDateAuthor, authorData)
+                authorData = (cAuthor[1], earlierDate, cAuthorId)
+                cursor.execute(updateAuthor, authorData)
             else:
                 # the author is not in the database
                 # insert a new entry
@@ -77,7 +65,7 @@ def update(data):
             cursor.execute(query, queryData)
             row = cursor.fetchone()
             if (row != None):
-                otherAuthorId = cursor[0]['id']
+                otherAuthorId = row[0]
                 # the author is in the database
                 # update the corresponding entry
                 updateAuthor = ("UPDATE authors "
@@ -98,16 +86,17 @@ def update(data):
         addPaper = ("INSERT INTO papers "
                     "(c_author, publication_date, pmcid) "
                     "VALUES (%s, %s, %s)")
-        paperData = (cAuthorId, date(data[3]), data[0])
+        paperData = (cAuthorId, date(int(data[3][0]), int(data[3][1]), 
+            int(data[3][2])), data[0])
         cursor.execute(addPaper, paperData)
     except mysql.connector.Error as err:
         print(err)
         exit(1)
 
-    conn.commit()
-    cursor.close()
-    conn.close()
+    
+    
 
 if __name__ == '__main__':
-    data = (1, ['zhou zhou'], [('zhou zhou', 'zz2181@columbia.edu')], ('2014', '1', '1')) 
-    update(data)
+    print('function should not be called independently.')
+#    data = (3, ['zhou zhou'], [('nico minc', 'fmndd@columbia.edu')], ('2013', '2', '1')) 
+#    update(cursor, data)
