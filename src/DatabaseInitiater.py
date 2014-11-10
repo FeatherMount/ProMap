@@ -1,3 +1,4 @@
+import os
 import mysql.connector
 from mysql.connector import errorcode
 from datetime import date
@@ -27,12 +28,18 @@ def main():
 	# obtain connection cursor
 	cursor = conn.cursor()
 
-	# TODO 
-	filename = '../resource/Cancer_Biol_Med_2012_Jun_9(2)_85-89.nxml'
-	data = NXMLParser.parse(filename)
-	DatabaseUpdater.update(cursor, data)
+	# walk through all the files
+	i = 0
+	rootDirectory = '/Volumes/DATAHUB/ProMap_Data'
+	for aDir, subdirs, files in os.walk(rootDirectory):
+		for aFile in files:
+			filename = os.path.join(aDir, aFile)
+			print(filename)
+			filename = '../resource/Cancer_Biol_Med_2012_Jun_9(2)_85-89.nxml'
+			data = NXMLParser.parse(filename)
+			DatabaseUpdater.update(cursor, data)
+			conn.commit()
 
-	conn.commit()
 	cursor.close()
 	conn.close()
 

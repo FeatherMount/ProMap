@@ -9,7 +9,7 @@ def update(cursor, data):
 
     function also takes in mysql cursor from the caller
 
-    it does not return anything but update the database
+    it returns -1 if the update was not successful, and 0 for success
     """
 
     try:
@@ -19,7 +19,7 @@ def update(cursor, data):
         row = cursor.fetchone()
         if (row != None):
             print('duplicate insertion: rejected')
-            return 0
+            return -1
         # process corresponding authors
         # the following id will be used to update 'papers' table
         cAuthorId = 0
@@ -89,12 +89,10 @@ def update(cursor, data):
         paperData = (cAuthorId, date(int(data[3][0]), int(data[3][1]), 
             int(data[3][2])), data[0])
         cursor.execute(addPaper, paperData)
+        return 0
     except mysql.connector.Error as err:
         print(err)
-        exit(1)
-
-    
-    
+        return -1
 
 if __name__ == '__main__':
     print('function should not be called independently.')

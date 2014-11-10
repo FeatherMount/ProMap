@@ -5,9 +5,10 @@ def isEmpty(obj):
     if (obj): return False
     else: return True
 
+# find all the elements with the tag of tagname
+# return a list of matching elements
 def findInSubtree(element, tagname):
     result = []
-    print(element.tag)
     if (element.tag == tagname):
         result.extend([element])
     if (len(element) > 0):
@@ -79,9 +80,21 @@ def parse(filename):
                         data = (name, '')
                         cAuthors.append(data)
                         case1 = True
-                else:
-                    # if not a corresponding author
-                    otherAuthors.append(name)
+                else: 
+                    # handle EMBO style xml 
+                    xrefList = findInSubtree(child, 'xref')
+                    if (len(xrefList) > 0):
+                        for xref in xrefList:
+                            if (xref.attrib['ref-type'] == 'corresp'):
+                                # this is an corresponding author
+                                data = (name, '')
+                                cAuthors.append(data)
+                                case1 = True
+                        if (case1 == False):
+                            otherAuthors.append(name)    
+                    else:
+                        # if not a corresponding author
+                        otherAuthors.append(name)
 
     # not done yet, some corresponding author information are embedded in author-notes
     if (case1):
@@ -97,8 +110,6 @@ def parse(filename):
         # the linking information is embedded entirely in the text
         text = etree.tostring(authorNotes).strip().decode('utf-8')
         emailElements = findInSubtree(authorNotes, 'email')
-        for emailelement in emailElements:
-            print(emailelement)
         for name in otherAuthors:
             j = 0
             if (text.find(name) != -1):
@@ -111,4 +122,10 @@ def parse(filename):
     return(pmcId, otherAuthors, cAuthors, publicationDate)
 
 if __name__ == '__main__':
+    parse('../resource/EMBO_J_2009_Oct_7_28(19)_3027-3039.nxml')
+    parse('../resource/AAPS_J_2010_Oct_19_12(4)_716-728.nxml')
+    parse('../resource/Acad_Emerg_Med_2008_Apr_15(4)_305-313.nxml')
+    parse('../resource/ACS_Nano_2010_Dec_28_4(12)_7630-7636.nxml')
     parse('../resource/Cancer_Biol_Med_2012_Jun_9(2)_85-89.nxml')
+    parse('../resource/EMBO_J_2009_Oct_7_28(19)_3027-3039.nxml')
+    parse('../resource/Open_Biochem_J_2008_Apr_29_2_49-59.nxml')
