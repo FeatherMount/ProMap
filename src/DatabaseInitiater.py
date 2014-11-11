@@ -15,7 +15,7 @@ def main():
 	try:
 	    conn = mysql.connector.connect(user = 'root', password = 'love',
 	                               host = '127.0.0.1',
-	                               database = 'ProMap')
+	                               database = 'promap')
 	except mysql.connector.Error as err:
 	    if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
 	        print("password and name pair incorrect")
@@ -27,16 +27,19 @@ def main():
 
 	# obtain connection cursor
 	cursor = conn.cursor()
-
-	# walk through all the files
 	i = 0
-	rootDirectory = '/Volumes/DATAHUB/ProMap_Data'
-	for aDir, subdirs, files in os.walk(rootDirectory):
-		for aFile in files:
+	# walk through all the files
+	rootDirectory = 'C:/Users/Zhou/Downloads/ProMap_Data/articles.C-H'
+	for aDir, theSubdirs, theFiles in os.walk(rootDirectory):
+		
+		for aFile in theFiles:
 			filename = os.path.join(aDir, aFile)
-			print(filename)
-			filename = '../resource/Cancer_Biol_Med_2012_Jun_9(2)_85-89.nxml'
+			print(aFile)
 			data = NXMLParser.parse(filename)
+			if (data[0] == -1): 
+				i = i + 1
+				print(i)
+				continue
 			DatabaseUpdater.update(cursor, data)
 			conn.commit()
 

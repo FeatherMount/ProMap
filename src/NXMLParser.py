@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as etree
+from datetime import date 
 
 # define isEmpty function to check if any object is empty
 def isEmpty(obj):
@@ -26,7 +27,6 @@ def parse(filename):
     and date of publication  
     """
 
-    #filename = '../resource/AAPS_J_2010_Oct_19_12(4)_716-728.nxml'
     tree = etree.parse(filename)
     root = tree.getroot()
     # according to the structure of the xml article meta nested under 
@@ -54,30 +54,70 @@ def parse(filename):
         elif (child.tag == 'author-notes'):
             authorNotes = child
         # find the publication date
-        elif (child.tag == "history"):
-            for date in child:
-                if (date.attrib['date-type'] == 'accepted'):
+        elif (child.tag == 'history'):
+            for theDate in child:
+                if ('date-type' in theDate.attrib and theDate.attrib['date-type'] == 'accepted'):
                     #publiction date YEAR MONTH DAY
-                    publicationDate = (date.find('year').text, \
-                            date.find('month').text, date.find('day').text)
-    
+                    if (theDate.find('year') != None):
+                        theYear = theDate.find('year').text
+                    else:
+                        theYear = 0	
+                    if (theDate.find('month') != None):
+                        theMonth = theDate.find('month').text
+                    else:
+                        theMonth = 6
+                    if (theDate.find('day') != None):
+                        theDay = theDate.find('day').text
+                    else:
+                        theDay = 1
+
+                    publicationDate = (theYear, theMonth, theDay)
+                    try:
+                        dateCheck = date(int(theYear), int(theMonth), int(theDay))
+                    except:
+                        return((-1,))
+        elif (child.tag == 'pub-date'):    
+            if ('pub-type' in child.attrib and (child.attrib['pub-type'] == 'ppub' or child.attrib['pub-type'] == 'epub')):
+                #for grandchild in child: print(grandchild.tag)
+                
+                if (child.find('year') != None):
+                    theYear = child.find('year').text
+                else:
+                    theYear = 0
+                
+                if (child.find('month') != None):
+                    theMonth = child.find('month').text
+                else:
+                    theMonth = 6
+                
+                if (child.find('day') != None):
+                    theDay = child.find('day').text
+                else:
+                    theDay = 1					
+                publicationDate = (theYear, theMonth, theDay)
+                try:
+                    dateCheck = date(int(theYear), int(theMonth), int(theDay))
+                except:
+                    return((-1,))
     case1 = False  # will be used for post-processing, corr author identified but no email
     for authorGroup in authorGroups:
         # parse author group information
         for child in authorGroup:
             if (child.tag == 'contrib' and child.attrib['contrib-type'] == 'author'):
                 # the first child is the name tag
-                name = child[0].find('given-names').text + ' ' \
-                        + child[0].find('surname').text
-                if ('corresp' in child.attrib and child.attrib['corresp'] == 'yes'):
+                try:
+                    name = child[0].find('given-names').text + ' ' + child[0].find('surname').text
+                except:
+                    return((-1,))
+                if ('corresp' in child.attrib): # and child.attrib['corresp'] == 'yes'):
                     # if it a corresponding author
                     # check to see if there is email field
-                    if (child[1].find('email') != None):
+                    if (len(child) > 2 and child[1].find('email') != None):
                         data = (name, child[1].find('email').text)
                         cAuthors.append(data)
                     #else post-process this case: case(1)
                     else:
-                        data = (name, '')
+                        data = (name, 'null')
                         cAuthors.append(data)
                         case1 = True
                 else: 
@@ -85,7 +125,7 @@ def parse(filename):
                     xrefList = findInSubtree(child, 'xref')
                     if (len(xrefList) > 0):
                         for xref in xrefList:
-                            if (xref.attrib['ref-type'] == 'corresp'):
+                            if ('ref-type' in xref.attrib and xref.attrib['ref-type'] == 'corresp'):
                                 # this is an corresponding author
                                 data = (name, '')
                                 cAuthors.append(data)
@@ -97,29 +137,37 @@ def parse(filename):
                         otherAuthors.append(name)
 
     # not done yet, some corresponding author information are embedded in author-notes
-    if (case1):
+    if (case1 and 'authorNotes' in locals()):
         i = 0
         # corresponding author identified but no email found
         for child in authorNotes:
             if (child.tag == 'corresp'):
                 for grandchild in child:
                     if (grandchild.tag == 'email'):
+                        if (i == len(cAuthors)): break	
                         cAuthors[i] = (cAuthors[i][0], grandchild.text)
                         i = i + 1
-    else:
+    elif ('authorNotes' in locals()):
         # the linking information is embedded entirely in the text
         text = etree.tostring(authorNotes).strip().decode('utf-8')
         emailElements = findInSubtree(authorNotes, 'email')
         for name in otherAuthors:
             j = 0
-            if (text.find(name) != -1):
+            if (text.find(name) != -1 and j < len(emailElements)):
                 data = (name, emailElements[j].text)
                 cAuthors.append(data)
                 otherAuthors.remove(name)
                 j = j + 1
 
-    print(pmcId, otherAuthors, cAuthors, publicationDate)
-    return(pmcId, otherAuthors, cAuthors, publicationDate)
+    # sanity check here, reject anything that may corrupt the database
+    if ('pmcId' in locals() and 'publicationDate' in locals()):
+        try:
+            print(pmcId, otherAuthors, cAuthors, publicationDate)
+        except:
+            return(pmcId, otherAuthors, cAuthors, publicationDate)
+        return(pmcId, otherAuthors, cAuthors, publicationDate)
+    else:
+        return((-1,))
 
 if __name__ == '__main__':
     parse('../resource/EMBO_J_2009_Oct_7_28(19)_3027-3039.nxml')
