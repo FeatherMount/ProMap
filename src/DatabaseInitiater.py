@@ -29,7 +29,7 @@ def main():
 	cursor = conn.cursor()
 	i = 0
 	# walk through all the files
-	rootDirectory = 'C:/Users/Zhou/Downloads/ProMap_Data/articles.C-H'
+	rootDirectory = 'C:/Users/Zhou/Downloads/ProMap_Data/articles.O-Z'
 	for aDir, theSubdirs, theFiles in os.walk(rootDirectory):
 		
 		for aFile in theFiles:
